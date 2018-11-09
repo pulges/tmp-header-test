@@ -78,7 +78,8 @@
       }
     }
 
-    function bispError() {
+    function bispError() 
+    console.log('E', this);
       addBispInfo('Error loading BISP! Status: ' +  this.status +  ' readyStateState:' + this.readyState);
     }
 
@@ -87,6 +88,7 @@
 
       if(BISPrequest) {
         try {
+
           BISPrequest.open('GET', url, true);
           BISPrequest.onreadystatechange = bispReadStateChange;
           BISPrequest.onerror = bispError;
