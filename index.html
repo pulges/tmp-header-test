@@ -1,12 +1,115 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta name="robots" content="noindex">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Document</title>
+
+
+
+  <!-- BEGIN Salesforce DMP ControlTag for "Bell Mobility - test site" -->
+    <script class="kxct" data-id="tbcl4yskj" data-timing="async" data-version="3.0" type="text/javascript">
+      window.Krux||((Krux=function(){Krux.q.push(arguments)}).q=[]);
+      (function(){
+        var k=document.createElement('script');k.type='text/javascript';k.async=true;
+        k.src=(location.protocol==='https:'?'https:':'http:')+'//cdn.krxd.net/controltag/tbcl4yskj.js';
+        var s=document.getElementsByTagName('script')[0];s.parentNode.insertBefore(k,s);
+      }());
+    </script>
+  <!-- END Salesforce DMP ControlTag -->
+
+  <style>
+    textarea {
+      font-size: 10px;
+    }
+  </style>
+
 </head>
-<body>
-  TEST
+
+  <h2>Your krux data:</h2>
+  <b>kxkuid:</b> <span id="kxkuid-val">...</span><br>
+  <b>kxuser:</b> <span id="kxuser-val">...</span><br>
+  <b>kxvisits:</b> <span id="kxvisits-val">...</span><br>
+  <b>kxsegs:</b> <span id="kxsegs-val">...</span><br>
+
+  <br>
+  <b>Data in localstorage:</b><br>
+  <textarea id="localst" cols="100" rows="15"></textarea><br>
+
+  <br>
+  <b>Bisp request log:</b><br>
+  <textarea id="bispData" cols="100" rows="55"></textarea><br>
+
+  <br>
+  <b>BISP INFO:</b>
+  <pre id="bispinfo"></pre><br>
+
+  <script>
+    var i = 0;
+
+    var pollKruxId = function(callback) {
+      if (localStorage.getItem('kxkuid') || i > 20) {
+        callback();
+      } else {
+        i++;
+        setTimeout(pollKruxId.bind(undefined, callback), 100);
+      }
+    }
+
+    var BISPrequest = new XMLHttpRequest();
+
+    var addBispInfo = function(txt) {
+      document.getElementById('bispData').innerHTML += txt + '\n\n';
+    }
+
+    function bispReadStateChange() {
+      addBispInfo('-------Request update.---------\nStatus: ' +  this.status +  '\nreadyStateState:' + this.readyState +  '\nResponseHeaders:\n' +  this.getAllResponseHeaders() + ' \nresponseText:\n' + this.responseText);
+    
+      if (this.status === 200 && this.readyState === 4) {
+        console.log(this);
+        var parser = new DOMParser();
+        var xmlDoc = parser.parseFromString(this.responseText, "text/xml");
+
+        document.getElementById('bispinfo').innerHTML += '<b>subId2:</b> ' +  xmlDoc.getElementsByTagName('subId2')[0].childNodes[0].nodeValue + '\n';
+        document.getElementById('bispinfo').innerHTML += '<b>eamLanguage:</b> ' +  xmlDoc.getElementsByTagName('eamLanguage')[0].childNodes[0].nodeValue + '\n';
+        document.getElementById('bispinfo').innerHTML += '<b>accountSubType:</b> ' +  xmlDoc.getElementsByTagName('accountSubType')[0].childNodes[0].nodeValue + '\n';
+      }
+    }
+
+    function bispError() {
+      addBispInfo('Error loading BISP! Status: ' +  this.status +  ' readyStateState:' + this.readyState);
+    }
+
+    var getBispInfo = function() {
+      var url = 'https://bisp.bwanet.ca/getIdToken?enstr_env=qa&redirect_uri=' + encodeURIComponent('https://pulges.github.io/tmp-header-test/');
+
+      if(BISPrequest) {
+        try {
+          BISPrequest.open('GET', url, true);
+          BISPrequest.onreadystatechange = bispReadStateChange;
+          BISPrequest.onerror = bispError;
+          BISPrequest.send();
+        } catch (e) {
+          console.warn(e);
+        }
+      } else {
+        console.error('XMLHttpRequest not supported!')
+      }
+    }
+
+    getBispInfo();
+
+    pollKruxId(function() {
+      document.getElementById('kxkuid-val').innerHTML = localStorage.getItem('kxkuid');
+      document.getElementById('kxuser-val').innerHTML = localStorage.getItem('kxuser');
+      document.getElementById('kxvisits-val').innerHTML = localStorage.getItem('kxvisits');
+      document.getElementById('kxsegs-val').innerHTML = localStorage.getItem('kxsegs');
+      document.getElementById('localst').innerHTML = Object.keys(localStorage).map(function(k){ return k + ': ' + localStorage.getItem(k); }).join('\n');
+    });
+    
+  </script>
+  
 </body>
 </html>
